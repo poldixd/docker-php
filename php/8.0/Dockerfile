@@ -35,6 +35,8 @@ RUN docker-php-ext-install \
     bz2 \
     pcntl
 
+RUN pecl install redis && docker-php-ext-enable redis
+
 RUN adduser --disabled-password --gecos "" $IMAGE_USER && \
   echo "$IMAGE_USER  ALL = ( ALL ) NOPASSWD: ALL" >> /etc/sudoers && \
   mkdir -p /var/www/html \
