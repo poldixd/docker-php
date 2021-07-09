@@ -15,6 +15,7 @@ RUN apt-get update -yqq
 
 RUN apt-get install \
     git \
+    imagemagick \
     libzip-dev \
     libonig-dev \
     libcurl4-openssl-dev \
@@ -22,6 +23,10 @@ RUN apt-get install \
     libpng-dev \
     libxml2-dev \
     libbz2-dev \
+    libmagickwand-dev \
+    libfreetype6-dev \
+    libjpeg-dev \
+    libwebp-dev \
     unzip \
     zip \
     -yqq
@@ -31,13 +36,15 @@ RUN docker-php-ext-install \
     pdo_mysql  \
     curl \
     intl \
-    gd \
     xml \
     zip \
     bz2 \
     pcntl
 
-RUN pecl install redis && docker-php-ext-enable redis
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install gd
+
+RUN pecl install imagick redis && docker-php-ext-enable imagick redis
 
 RUN adduser --disabled-password --gecos "" $IMAGE_USER && \
   echo "$IMAGE_USER  ALL = ( ALL ) NOPASSWD: ALL" >> /etc/sudoers && \
