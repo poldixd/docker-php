@@ -22,6 +22,8 @@ RUN apt-get install \
     libpng-dev \
     libxml2-dev \
     libbz2-dev \
+    unzip \
+    zip \
     -yqq
 
 RUN docker-php-ext-install \
