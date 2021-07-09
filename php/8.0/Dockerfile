@@ -16,6 +16,8 @@ RUN apt-get update -yqq
 RUN apt-get install \
     git \
     imagemagick \
+    libgmp-dev \
+    libpq-dev \
     libzip-dev \
     libonig-dev \
     libcurl4-openssl-dev \
@@ -27,19 +29,30 @@ RUN apt-get install \
     libfreetype6-dev \
     libjpeg-dev \
     libwebp-dev \
+    libxslt1-dev \
     unzip \
     zip \
     -yqq
 
 RUN docker-php-ext-install \
-    mbstring  \
-    pdo_mysql  \
-    curl \
-    intl \
-    xml \
-    zip \
+    bcmath \
     bz2 \
-    pcntl
+    calendar \
+    curl \
+    exif \
+    gmp \
+    intl \
+    mbstring \
+    mysqli \
+    opcache \
+    pcntl \
+    pdo_mysql \
+    pdo_pgsql \
+    pgsql \
+    soap \
+    xml \
+    xsl \
+    zip
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install gd
