@@ -44,10 +44,11 @@ RUN docker-php-ext-install \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install gd
 
-RUN pecl install imagick redis && docker-php-ext-enable imagick redis
+RUN pecl install imagick redis xdebug && docker-php-ext-enable imagick redis xdebug
 
 RUN adduser --disabled-password --gecos "" $IMAGE_USER && \
   echo "$IMAGE_USER  ALL = ( ALL ) NOPASSWD: ALL" >> /etc/sudoers && \
+  echo 'xdebug.mode=coverage' > /usr/local/etc/php/conf.d/20-xdebug.ini \
   echo 'memory_limit=1024M' > /usr/local/etc/php/conf.d/zz-conf.ini && \
   mkdir -p /var/www/html \
   && rm -rf ~/.composer/cache/* \
