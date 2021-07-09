@@ -41,6 +41,7 @@ RUN pecl install redis && docker-php-ext-enable redis
 
 RUN adduser --disabled-password --gecos "" $IMAGE_USER && \
   echo "$IMAGE_USER  ALL = ( ALL ) NOPASSWD: ALL" >> /etc/sudoers && \
+  echo 'memory_limit=1024M' > /usr/local/etc/php/conf.d/zz-conf.ini && \
   mkdir -p /var/www/html \
   && rm -rf ~/.composer/cache/* \
   && chown -R $IMAGE_USER:$IMAGE_USER /var/www $HOME \
