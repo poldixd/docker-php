@@ -57,7 +57,7 @@ RUN docker-php-ext-install \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install gd
 
-RUN pecl install imagick redis xdebug && docker-php-ext-enable imagick redis xdebug
+RUN pecl install imagick mongodb redis xdebug && docker-php-ext-enable imagick mongodb redis xdebug
 
 RUN adduser --disabled-password --gecos "" $IMAGE_USER && \
   echo "$IMAGE_USER  ALL = ( ALL ) NOPASSWD: ALL" >> /etc/sudoers && \
