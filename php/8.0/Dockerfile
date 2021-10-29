@@ -30,6 +30,7 @@ RUN apt-get install \
     libjpeg-dev \
     libwebp-dev \
     libxslt1-dev \
+    libssl-dev \
     unzip \
     zip \
     -yqq
