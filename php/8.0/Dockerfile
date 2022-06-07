@@ -31,6 +31,8 @@ RUN apt-get install \
     libwebp-dev \
     libxslt1-dev \
     libssl-dev \
+    locales \
+    locales-all \
     unzip \
     zip \
     -yqq
