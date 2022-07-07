@@ -1,10 +1,5 @@
 FROM php:8.1
 
-ENV IMAGE_USER=php
-ENV HOME=/home/$IMAGE_USER
-
-USER root
-
 WORKDIR /tmp
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -63,15 +58,9 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
 
 RUN pecl install imagick mongodb redis xdebug && docker-php-ext-enable imagick mongodb redis xdebug
 
-RUN adduser --disabled-password --gecos "" $IMAGE_USER && \
-  echo "$IMAGE_USER  ALL = ( ALL ) NOPASSWD: ALL" >> /etc/sudoers && \
-  echo 'xdebug.mode=coverage' > /usr/local/etc/php/conf.d/20-xdebug.ini && \
+RUN echo 'xdebug.mode=coverage' > /usr/local/etc/php/conf.d/20-xdebug.ini && \
   echo 'memory_limit=1024M' > /usr/local/etc/php/conf.d/zz-conf.ini && \
-  mkdir -p /var/www/html \
-  && rm -rf ~/.composer/cache/* \
-  && chown -R $IMAGE_USER:$IMAGE_USER /var/www $HOME \
-  && bash ./cleanup.sh
+  rm -rf ~/.composer/cache/* && \
+  bash ./cleanup.sh
 
-USER $IMAGE_USER
-
-WORKDIR /var/www/html
+WORKDIR /var/www
