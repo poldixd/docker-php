@@ -10,6 +10,7 @@ RUN apt-get update -yqq
 
 RUN apt-get install \
     git \
+    chromium \
     imagemagick \
     libgmp-dev \
     libpq-dev \
