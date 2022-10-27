@@ -6,6 +6,7 @@ It's my personal Docker PHP Image for the CI. Everything you need to test a Lara
 | --------------- | ----------- |
 | poldixd/php:8.0 | PHP 8.0     |
 | poldixd/php:8.1 | PHP 8.1     |
+| poldixd/php:8.2 | PHP 8.2.0RC4    |
 
 ## Build locally
 
