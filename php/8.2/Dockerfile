@@ -1,67 +1,62 @@
-FROM php:8.2.0RC4
+FROM php:8.2.0RC4-alpine
 
-WORKDIR /tmp
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-COPY ./php/scripts/*.sh /tmp/
-RUN chmod +x /tmp/*.sh
-
-RUN apt-get update -yqq
-
-RUN apt-get install \
-    git \
+RUN apk add --no-cache \
+    bash \
     chromium \
+    curl \
+    freetype-dev \
+    g++ \
+    gcc \
+    git \
+    icu-dev \
+    icu-libs \
     imagemagick \
-    libgmp-dev \
-    libpq-dev \
+    libc-dev \
     libzip-dev \
-    libonig-dev \
-    libcurl4-openssl-dev \
-    libicu-dev \
-    libpng-dev \
-    libxml2-dev \
-    libbz2-dev \
-    libmagickwand-dev \
-    libfreetype6-dev \
-    libjpeg-dev \
-    libwebp-dev \
-    libxslt1-dev \
-    libssl-dev \
-    libnss3 \
-    locales \
-    locales-all \
-    unzip \
-    zip \
-    -yqq
+    make \
+    mysql-client \
+    nodejs \
+    npm \
+    oniguruma-dev \
+    openssh-client \
+    postgresql-libs \
+    rsync \
+    yarn \
+    zlib-dev
 
-RUN docker-php-ext-install \
+RUN chmod +x /usr/local/bin/install-php-extensions && \
+    install-php-extensions \
+    @composer \
     bcmath \
     bz2 \
     calendar \
-    curl \
     exif \
+    gd \
     gmp \
+    imagick-stable \
     intl \
-    mbstring \
+    mongodb-stable \
     mysqli \
     opcache \
     pcntl \
+    pcov \
     pdo_mysql \
     pdo_pgsql \
     pgsql \
+    redis-stable \
     soap \
-    xml \
+    xdebug-beta \
     xsl \
     zip
 
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install gd
-
-RUN pecl install imagick mongodb redis xdebug && docker-php-ext-enable imagick mongodb redis xdebug
-
 RUN echo 'xdebug.mode=coverage' > /usr/local/etc/php/conf.d/20-xdebug.ini && \
   echo 'memory_limit=1024M' > /usr/local/etc/php/conf.d/zz-conf.ini && \
-  rm -rf ~/.composer/cache/* && \
-  bash ./cleanup.sh
+  rm -rf ~/.composer/cache/*
+
+ENV PATH ./vendor/bin:/composer/vendor/bin:/root/.composer/vendor/bin:/usr/local/bin:$PATH
+
+RUN composer global require "squizlabs/php_codesniffer=*"
 
 WORKDIR /var/www
