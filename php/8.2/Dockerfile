@@ -52,7 +52,7 @@ RUN chmod +x /usr/local/bin/install-php-extensions && \
     zip
 
 RUN echo 'xdebug.mode=coverage' > /usr/local/etc/php/conf.d/20-xdebug.ini && \
-  echo 'memory_limit=1024M' > /usr/local/etc/php/conf.d/zz-conf.ini && \
+  echo 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-conf.ini && \
   rm -rf ~/.composer/cache/*
 
 ENV PATH ./vendor/bin:/composer/vendor/bin:/root/.composer/vendor/bin:/usr/local/bin:$PATH

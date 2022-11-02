@@ -66,7 +66,7 @@ RUN pecl install imagick mongodb redis xdebug && docker-php-ext-enable imagick m
 RUN adduser --disabled-password --gecos "" $IMAGE_USER && \
   echo "$IMAGE_USER  ALL = ( ALL ) NOPASSWD: ALL" >> /etc/sudoers && \
   echo 'xdebug.mode=coverage' > /usr/local/etc/php/conf.d/20-xdebug.ini && \
-  echo 'memory_limit=1024M' > /usr/local/etc/php/conf.d/zz-conf.ini && \
+  echo 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-conf.ini && \
   mkdir -p /var/www/html \
   && rm -rf ~/.composer/cache/* \
   && chown -R $IMAGE_USER:$IMAGE_USER /var/www $HOME \
