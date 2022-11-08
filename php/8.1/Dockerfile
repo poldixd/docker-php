@@ -30,6 +30,7 @@ RUN apt-get install \
     libnss3 \
     locales \
     locales-all \
+    mariadb-client \
     unzip \
     zip \
     -yqq
