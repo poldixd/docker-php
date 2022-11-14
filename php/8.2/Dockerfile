@@ -1,4 +1,4 @@
-FROM php:8.2.0RC4-alpine
+FROM php:8.2.0RC6-alpine
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
