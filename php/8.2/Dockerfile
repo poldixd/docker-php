@@ -1,30 +1,30 @@
-FROM php:8.2-alpine
+FROM php:8.2
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-RUN apk add --no-cache \
+RUN apt-get update -yqq
+
+RUN apt-get install \
+    git \
     bash \
     chromium \
     curl \
-    freetype-dev \
+    libfreetype6-dev \
     g++ \
     gcc \
     git \
-    icu-dev \
-    icu-libs \
+    libicu-dev \
     imagemagick \
     libc-dev \
     libzip-dev \
     make \
-    mysql-client \
+    mariadb-client \
     nodejs \
     npm \
-    oniguruma-dev \
     openssh-client \
-    postgresql-libs \
     rsync \
     yarn \
-    zlib-dev
+    -yqq
 
 RUN chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions \
