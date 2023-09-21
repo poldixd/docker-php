@@ -53,10 +53,15 @@ RUN chmod +x /usr/local/bin/install-php-extensions && \
 
 RUN echo 'xdebug.mode=coverage' > /usr/local/etc/php/conf.d/20-xdebug.ini && \
   echo 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-conf.ini && \
+  sed -i 's#<policy domain="coder" rights="none" pattern="PDF" />#<policy domain="coder" rights="read|write" pattern="PDF" />#' /etc/ImageMagick-6/policy.xml && \
   rm -rf ~/.composer/cache/*
 
 ENV PATH ./vendor/bin:/composer/vendor/bin:/root/.composer/vendor/bin:/usr/local/bin:$PATH
 
 RUN composer global require "squizlabs/php_codesniffer=*"
+
+RUN apt-get -y autoremove && \
+    apt-get -y clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www
