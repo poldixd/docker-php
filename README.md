@@ -1,17 +1,11 @@
 # Docker PHP Image
 
-It's my personal Docker PHP Image for the CI. Everything you need to test a Laravel application is on board. There are some versions:
-
-| Tag             | PHP Version |
-| --------------- | ----------- |
-| poldixd/php:8.0 | PHP 8.0     |
-| poldixd/php:8.1 | PHP 8.1     |
-| poldixd/php:8.2 | PHP 8.2.0RC4    |
+It's my personal Docker PHP Image for the CI. Everything you need to test a Laravel application is on board. You can find the image on the docker hub: https://hub.docker.com/repository/docker/poldixd/php/general
 
 ## Build locally
 
 ```bash
-$ docker build . -t php-docker -f php/8.1/Dockerfile
+$ docker build . -t php-docker -f php/8.3/Dockerfile
 ```
 
 ## Use it in your .gitlab-ci.yml
@@ -19,7 +13,7 @@ $ docker build . -t php-docker -f php/8.1/Dockerfile
 ```yml
 test:
   stage: test
-  image: poldixd/php:8.1
+  image: poldixd/php:8.3
   script:
     - php vendor/bin/pest --coverage
 ```
