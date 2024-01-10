@@ -1,4 +1,4 @@
-FROM php:8.0
+FROM php:8.0.30
 
 ENV IMAGE_USER=php
 ENV HOME=/home/$IMAGE_USER
