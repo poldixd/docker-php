@@ -35,7 +35,7 @@ RUN chmod +x /usr/local/bin/install-php-extensions && \
     exif \
     gd \
     gmp \
-    imagick-stable \
+    imagick/imagick@master \
     intl \
     mongodb-stable \
     mysqli \
@@ -47,7 +47,6 @@ RUN chmod +x /usr/local/bin/install-php-extensions && \
     pgsql \
     redis-stable \
     soap \
-    xdebug-beta \
     xsl \
     zip
 
@@ -55,8 +54,7 @@ COPY php/8.3/imagemagick-policy.xml .
 
 RUN mv imagemagick-policy.xml /etc/ImageMagick-6/policy.xml
 
-RUN echo 'xdebug.mode=coverage' > /usr/local/etc/php/conf.d/20-xdebug.ini && \
-  echo 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-conf.ini
+RUN echo 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-conf.ini
 
 ENV PATH ./vendor/bin:/composer/vendor/bin:/root/.composer/vendor/bin:/usr/local/bin:$PATH
 
