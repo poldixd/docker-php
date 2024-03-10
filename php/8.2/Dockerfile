@@ -60,6 +60,13 @@ ENV PATH ./vendor/bin:/composer/vendor/bin:/root/.composer/vendor/bin:/usr/local
 
 RUN composer global require "squizlabs/php_codesniffer=*"
 
+# Node.js
+RUN curl -sL https://deb.nodesource.com/setup_20.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install npm@10 -g
+RUN command -v node
+RUN command -v npm
+
 RUN apt-get purge -y gcc make && \
     apt-get -y autoremove && \
     apt-get -y clean && \
