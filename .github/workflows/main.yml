@@ -31,5 +31,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           file: php/${{ matrix.version }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: poldixd/php:${{ matrix.version }}
