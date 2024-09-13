@@ -56,7 +56,7 @@ RUN mv imagemagick-policy.xml /etc/ImageMagick-6/policy.xml
 
 RUN echo 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-conf.ini
 
-ENV PATH ./vendor/bin:/composer/vendor/bin:/root/.composer/vendor/bin:/usr/local/bin:$PATH
+ENV PATH=./vendor/bin:/composer/vendor/bin:/root/.composer/vendor/bin:/usr/local/bin:$PATH
 
 RUN composer global require "squizlabs/php_codesniffer=*"
 
