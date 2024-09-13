@@ -7,7 +7,7 @@ RUN apt-get update -yqq
 RUN apt-get install \
     git \
     bash \
-    chromium \
+    google-chrome-stable \
     curl \
     libfreetype6-dev \
     g++ \
