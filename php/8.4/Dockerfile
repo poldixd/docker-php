@@ -41,7 +41,6 @@ RUN chmod +x /usr/local/bin/install-php-extensions && \
     mysqli \
     opcache \
     pcntl \
-    pcov \
     pdo_mysql \
     pdo_pgsql \
     pgsql \
