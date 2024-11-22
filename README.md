@@ -5,7 +5,7 @@ It's my personal Docker PHP Image for the CI. Everything you need to test a Lara
 ## Build locally
 
 ```bash
-$ docker build . -t php-docker -f php/8.3/Dockerfile
+$ docker build . -t php-docker -f php/8.4/Dockerfile
 ```
 
 ## Use it in your .gitlab-ci.yml
@@ -13,7 +13,7 @@ $ docker build . -t php-docker -f php/8.3/Dockerfile
 ```yml
 test:
   stage: test
-  image: poldixd/php:8.3
+  image: poldixd/php:8.4
   script:
     - php vendor/bin/pest --coverage
 ```
