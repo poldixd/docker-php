@@ -1,4 +1,4 @@
-FROM php:8.2.26
+FROM php:8.2.26-cli
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
