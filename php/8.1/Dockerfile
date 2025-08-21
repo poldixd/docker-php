@@ -1,4 +1,4 @@
-FROM php:8.1.32-cli
+FROM php:8.1.33-cli
 
 WORKDIR /tmp
 
