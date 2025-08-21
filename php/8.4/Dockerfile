@@ -24,7 +24,6 @@ RUN apt-get install \
     openssh-client \
     rsync \
     yarn \
-    sockets \
     -yqq
 
 RUN chmod +x /usr/local/bin/install-php-extensions && \
@@ -47,6 +46,7 @@ RUN chmod +x /usr/local/bin/install-php-extensions && \
     pgsql \
     redis-stable \
     soap \
+    sockets \
     xdebug \
     xsl \
     zip
