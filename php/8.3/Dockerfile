@@ -2,29 +2,23 @@ FROM php:8.3.24-cli
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-RUN apt-get update -yqq
-
-RUN apt-get install \
-    git \
+RUN apt-get update -yqq && apt-get install -yqq --no-install-recommends \
     bash \
     chromium \
     curl \
     libfreetype6-dev \
     g++ \
     gcc \
-    git \
     libicu-dev \
     imagemagick \
     libc-dev \
     libzip-dev \
     make \
     mariadb-client \
-    nodejs \
-    npm \
     openssh-client \
     rsync \
-    yarn \
-    -yqq
+    git \
+ && rm -rf /var/lib/apt/lists/*
 
 RUN chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions \
@@ -54,7 +48,7 @@ RUN chmod +x /usr/local/bin/install-php-extensions && \
 
 COPY php/8.3/imagemagick-policy.xml .
 
-RUN mv imagemagick-policy.xml /etc/ImageMagick-6/policy.xml
+RUN mv imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
 
 RUN echo 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-conf.ini
 
@@ -68,10 +62,12 @@ RUN composer global require "squizlabs/php_codesniffer=*"
 RUN curl -sL https://deb.nodesource.com/setup_22.x | bash -
 RUN apt-get install -y nodejs
 RUN npm install npm@10 -g
+RUN corepack enable && corepack prepare yarn@stable --activate
+RUN command -v yarn
 RUN command -v node
 RUN command -v npm
 
-RUN apt-get purge -y gcc make && \
+RUN apt-get purge -y gcc g++ make && \
     apt-get -y autoremove && \
     apt-get -y clean && \
     rm -rf /var/lib/apt/lists/* && \
