@@ -1,68 +1,69 @@
 FROM php:8.1.33-cli
 
-WORKDIR /tmp
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-COPY ./php/scripts/*.sh /tmp/
-RUN chmod +x /tmp/*.sh
-
-RUN apt-get update -yqq
-
-RUN apt-get install \
-    git \
+RUN apt-get update -yqq && apt-get install -yqq --no-install-recommends \
+    bash \
     chromium \
-    imagemagick \
-    libgmp-dev \
-    libpq-dev \
-    libzip-dev \
-    libonig-dev \
-    libcurl4-openssl-dev \
-    libicu-dev \
-    libpng-dev \
-    libxml2-dev \
-    libbz2-dev \
-    libmagickwand-dev \
+    curl \
     libfreetype6-dev \
-    libjpeg-dev \
-    libwebp-dev \
-    libxslt1-dev \
-    libssl-dev \
-    libnss3 \
-    locales \
-    locales-all \
+    g++ \
+    gcc \
+    libicu-dev \
+    imagemagick \
+    libc-dev \
+    libzip-dev \
+    make \
     mariadb-client \
-    unzip \
-    zip \
-    -yqq
+    openssh-client \
+    rsync \
+    git \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-install \
+RUN chmod +x /usr/local/bin/install-php-extensions && \
+    install-php-extensions \
+    @composer \
     bcmath \
     bz2 \
     calendar \
-    curl \
     exif \
+    gd \
     gmp \
+    imagick-stable \
     intl \
-    mbstring \
+    mongodb-stable \
     mysqli \
     opcache \
     pcntl \
+    pcov \
     pdo_mysql \
     pdo_pgsql \
     pgsql \
+    redis-stable \
     soap \
-    xml \
+    sockets \
     xsl \
     zip
 
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install gd
+RUN echo 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-conf.ini
 
-RUN pecl install imagick mongodb redis xdebug && docker-php-ext-enable imagick mongodb redis xdebug
+ENV PATH=./vendor/bin:/composer/vendor/bin:/root/.composer/vendor/bin:/usr/local/bin:$PATH
 
-RUN echo 'xdebug.mode=coverage' > /usr/local/etc/php/conf.d/20-xdebug.ini && \
-  echo 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-conf.ini && \
-  rm -rf ~/.composer/cache/* && \
-  bash ./cleanup.sh
+RUN composer global require "squizlabs/php_codesniffer=*"
+
+# Node.js
+RUN curl -sL https://deb.nodesource.com/setup_22.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install npm@10 -g
+RUN corepack enable && corepack prepare yarn@stable --activate
+RUN command -v yarn
+RUN command -v node
+RUN command -v npm
+
+RUN apt-get purge -y gcc g++ make && \
+    apt-get -y autoremove && \
+    apt-get -y clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf ~/.composer/cache/*
 
 WORKDIR /var/www
