@@ -6,6 +6,7 @@ RUN apt-get update -yqq && apt-get install -yqq --no-install-recommends \
     bash \
     chromium \
     curl \
+    ghostscript \
     libfreetype6-dev \
     g++ \
     gcc \
