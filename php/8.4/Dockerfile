@@ -59,7 +59,7 @@ ENV PATH=./vendor/bin:/composer/vendor/bin:/root/.composer/vendor/bin:/usr/local
 RUN composer global require "squizlabs/php_codesniffer=*"
 
 # Node.js
-RUN curl -sL https://deb.nodesource.com/setup_22.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_24.x | bash -
 RUN apt-get install -y nodejs
 RUN npm install npm@10 -g
 RUN corepack enable && corepack prepare yarn@stable --activate
