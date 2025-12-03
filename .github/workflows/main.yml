@@ -34,10 +34,10 @@ jobs:
         id: vars
         run: |
           if [ "${{ matrix.variant }}" = "chromium" ]; then
-            echo "TAG=php-${{ matrix.version }}-chromium" >> $GITHUB_OUTPUT
+            echo "TAG=${{ matrix.version }}-chromium" >> $GITHUB_OUTPUT
             echo "INSTALL_CHROMIUM=true" >> $GITHUB_OUTPUT
           else
-            echo "TAG=php-${{ matrix.version }}" >> $GITHUB_OUTPUT
+            echo "TAG=${{ matrix.version }}" >> $GITHUB_OUTPUT
             echo "INSTALL_CHROMIUM=false" >> $GITHUB_OUTPUT
           fi
 

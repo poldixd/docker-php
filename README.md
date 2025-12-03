@@ -9,7 +9,7 @@ It's my personal Docker PHP Image for the CI. Everything you need to test a Lara
 ```bash
 docker build \
   --build-arg INSTALL_CHROMIUM=true \
-  -t poldixd/php:php-8.4-chromium \
+  -t poldixd/php:8.4-chromium \
   -f php/8.4/Dockerfile \
   .
 ```
@@ -19,7 +19,7 @@ docker build \
 ```bash
 docker build \
   --build-arg INSTALL_CHROMIUM=false \
-  -t poldixd/php:php-8.4 \
+  -t poldixd/php:8.4 \
   -f php/8.4/Dockerfile \
   .
 ```
