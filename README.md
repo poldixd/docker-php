@@ -4,8 +4,24 @@ It's my personal Docker PHP Image for the CI. Everything you need to test a Lara
 
 ## Build locally
 
+### With Chromium
+
 ```bash
-$ docker build . -t php-docker -f php/8.4/Dockerfile
+docker build \
+  --build-arg INSTALL_CHROMIUM=true \
+  -t poldixd/php:php-8.4-chromium \
+  -f php/8.4/Dockerfile \
+  .
+```
+
+### Without Chromium
+
+```bash
+docker build \
+  --build-arg INSTALL_CHROMIUM=false \
+  -t poldixd/php:php-8.4 \
+  -f php/8.4/Dockerfile \
+  .
 ```
 
 ## Use it in your .gitlab-ci.yml
