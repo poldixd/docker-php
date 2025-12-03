@@ -1,10 +1,11 @@
 FROM php:8.5.0-cli
 
+ARG INSTALL_CHROMIUM=false
+
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
 RUN apt-get update -yqq && apt-get install -yqq --no-install-recommends \
     bash \
-    chromium \
     curl \
     ghostscript \
     libfreetype6-dev \
@@ -19,6 +20,9 @@ RUN apt-get update -yqq && apt-get install -yqq --no-install-recommends \
     openssh-client \
     rsync \
     git \
+ && if [ "$INSTALL_CHROMIUM" = "true" ]; then \
+      apt-get install -yqq --no-install-recommends chromium; \
+    fi \
  && rm -rf /var/lib/apt/lists/*
 
 RUN chmod +x /usr/local/bin/install-php-extensions && \
@@ -46,7 +50,7 @@ RUN chmod +x /usr/local/bin/install-php-extensions && \
     xsl \
     zip
 
-COPY php/8.4/imagemagick-policy.xml .
+COPY php/8.5/imagemagick-policy.xml .
 
 RUN mv imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
 
@@ -61,14 +65,12 @@ RUN composer global require "squizlabs/php_codesniffer=*"
 # Node.js
 RUN curl -sL https://deb.nodesource.com/setup_24.x | bash -
 RUN apt-get install -y nodejs
-RUN npm install npm@10 -g
+RUN npm install npm@latest -g
 RUN corepack enable && corepack prepare yarn@stable --activate
 RUN command -v yarn
 RUN command -v node
 RUN command -v npm
 
-# Pre-install latest Playwright system deps (no browsers)
-RUN npx --yes playwright install-deps
 
 RUN apt-get purge -y gcc g++ make && \
     apt-get -y autoremove && \
