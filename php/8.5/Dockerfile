@@ -71,6 +71,8 @@ RUN command -v yarn
 RUN command -v node
 RUN command -v npm
 
+# Pre-install latest Playwright system deps (no browsers)
+RUN npx --yes playwright install-deps
 
 RUN apt-get purge -y gcc g++ make && \
     apt-get -y autoremove && \
