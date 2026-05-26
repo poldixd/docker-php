@@ -42,7 +42,7 @@ jobs:
           fi
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           file: php/${{ matrix.version }}/Dockerfile
           platforms: linux/amd64,linux/arm64
