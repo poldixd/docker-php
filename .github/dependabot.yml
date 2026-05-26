@@ -1,0 +1,25 @@
+version: 2
+
+updates:
+  - package-ecosystem: "docker"
+    directories:
+      - "/php/8.1"
+      - "/php/8.2"
+      - "/php/8.3"
+      - "/php/8.4"
+      - "/php/8.5"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 5
