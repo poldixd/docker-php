@@ -1,4 +1,4 @@
-FROM php:8.4.25-cli
+FROM php:8.4.26-cli
 
 ARG INSTALL_CHROMIUM=false
 
