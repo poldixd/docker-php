@@ -1,82 +1,25 @@
-FROM php:8.2.35-cli
+# syntax=docker/dockerfile:1
+FROM node:24.22.1-trixie-slim AS node
+FROM composer:2.10.3 AS composer
+FROM mlocati/php-extension-installer:2.12.3 AS extensions
+
+FROM php:8.2.35-cli-trixie AS runtime
 
 ARG INSTALL_CHROMIUM=false
 
-COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
+COPY --from=extensions /usr/bin/install-php-extensions /usr/local/bin/install-php-extensions
 
-ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+RUN --mount=type=bind,source=php/common,target=/tmp/php-image \
+    sh /tmp/php-image/install.sh
 
-RUN apt-get update -yqq && apt-get install -yqq --no-install-recommends \
-    bash \
-    curl \
-    ghostscript \
-    libfreetype6-dev \
-    g++ \
-    gcc \
-    libicu-dev \
-    imagemagick \
-    libc-dev \
-    libzip-dev \
-    make \
-    mariadb-client \
-    openssh-client \
-    rsync \
-    git \
- && if [ "$INSTALL_CHROMIUM" = "true" ]; then \
-      apt-get install -yqq --no-install-recommends chromium; \
-    fi \
- && rm -rf /var/lib/apt/lists/*
-
-RUN chmod +x /usr/local/bin/install-php-extensions && \
-    install-php-extensions \
-    bcmath \
-    bz2 \
-    calendar \
-    exif \
-    gd \
-    gmp \
-    imagick-stable \
-    intl \
-    mongodb-stable \
-    mysqli \
-    opcache \
-    pcntl \
-    pcov \
-    pdo_mysql \
-    pdo_pgsql \
-    pgsql \
-    redis-stable \
-    soap \
-    sockets \
-    xsl \
-    zip
-
-COPY php/8.2/imagemagick-policy.xml .
-
-RUN mv imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
-
-RUN echo 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-conf.ini
-
-ENV PATH=./vendor/bin:/composer/vendor/bin:/root/.composer/vendor/bin:/usr/local/bin:$PATH
-
-RUN composer global require "squizlabs/php_codesniffer=*"
-
-# Node.js
-RUN curl -sL https://deb.nodesource.com/setup_24.x | bash -
-RUN apt-get install -y nodejs
-RUN npm install npm@latest -g
-RUN corepack enable && corepack prepare yarn@stable --activate
-RUN command -v yarn
-RUN command -v node
-RUN command -v npm
-
-# Pre-install latest Playwright system deps (no browsers)
-RUN npx --yes playwright install-deps
-
-RUN apt-get purge -y gcc g++ make && \
-    apt-get -y autoremove && \
-    apt-get -y clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf ~/.composer/cache/*
+ENV PATH="./vendor/bin:/usr/local/bin:$PATH" \
+    XDEBUG_MODE=off
 
 WORKDIR /var/www
+
+FROM runtime AS test
+RUN --mount=type=bind,source=tests,target=/tmp/image-tests \
+    sh /tmp/image-tests/smoke.sh "$INSTALL_CHROMIUM"

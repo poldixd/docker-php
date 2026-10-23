@@ -2,17 +2,28 @@ name: ci
 
 on:
   push:
-    branches:
-      - 'main'
+    branches: ['main']
+  pull_request:
+  schedule:
+    - cron: '0 5 * * 2'
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Serialize publications so an older run cannot overwrite newer image tags.
+concurrency:
+  group: php-images-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   docker:
     runs-on: ubuntu-latest
-    continue-on-error: true
+    timeout-minutes: 120
     strategy:
+      fail-fast: false
       matrix:
-        version: ['8.1', '8.2', '8.3', '8.4', '8.5']
+        version: ['8.2', '8.3', '8.4', '8.5']
         variant: ['base', 'chromium']
 
     steps:
@@ -25,6 +36,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Login to DockerHub
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -32,22 +44,31 @@ jobs:
 
       - name: Compute image tag
         id: vars
+        env:
+          PHP_VERSION: ${{ matrix.version }}
+          VARIANT: ${{ matrix.variant }}
         run: |
-          if [ "${{ matrix.variant }}" = "chromium" ]; then
-            echo "TAG=${{ matrix.version }}-chromium" >> $GITHUB_OUTPUT
-            echo "INSTALL_CHROMIUM=true" >> $GITHUB_OUTPUT
+          if [ "$VARIANT" = "chromium" ]; then
+            echo "TAG=$PHP_VERSION-chromium" >> "$GITHUB_OUTPUT"
+            echo "INSTALL_CHROMIUM=true" >> "$GITHUB_OUTPUT"
           else
-            echo "TAG=${{ matrix.version }}" >> $GITHUB_OUTPUT
-            echo "INSTALL_CHROMIUM=false" >> $GITHUB_OUTPUT
+            echo "TAG=$PHP_VERSION" >> "$GITHUB_OUTPUT"
+            echo "INSTALL_CHROMIUM=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build and push
+      - name: Build, test both architectures, and optionally push
         uses: docker/build-push-action@v7
         with:
+          context: .
           file: php/${{ matrix.version }}/Dockerfile
+          target: test
           platforms: linux/amd64,linux/arm64
-          push: true
+          pull: true
+          push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+          # Re-run tests even when the runtime layers are cached.
+          no-cache-filters: ${{ github.event_name == 'schedule' && 'runtime,test' || 'test' }}
           build-args: |
             INSTALL_CHROMIUM=${{ steps.vars.outputs.INSTALL_CHROMIUM }}
-          tags: |
-            poldixd/php:${{ steps.vars.outputs.TAG }}
+          tags: poldixd/php:${{ steps.vars.outputs.TAG }}
+          cache-from: type=gha,scope=php-${{ matrix.version }}-${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=php-${{ matrix.version }}-${{ matrix.variant }}

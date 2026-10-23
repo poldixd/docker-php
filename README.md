@@ -1,38 +1,80 @@
 # Docker PHP Image
 
-It's my personal Docker PHP Image for the CI. Everything you need to test a Laravel application is on board. You can find the image on the docker hub: https://hub.docker.com/repository/docker/poldixd/php/general
+Personal PHP CLI images for testing Laravel applications in CI, published as
+[`poldixd/php`](https://hub.docker.com/r/poldixd/php).
+
+Supported tags: `8.2`, `8.3`, `8.4`, `8.5`, plus a `-chromium` variant of each.
+All are built for `linux/amd64` and `linux/arm64` on Debian Trixie.
+
+## Included tools
+
+- Composer, Node.js 24 (including its bundled npm), Corepack and Yarn.
+- MySQL/MariaDB client, Git, SSH client and rsync.
+- PHP extensions for MySQL, PostgreSQL, SQLite, Redis, MongoDB, image processing,
+  and Xdebug coverage. See `php/common/install.sh` for the shared installation.
+- ImageMagick and Ghostscript, with PDF conversion explicitly allowed.
+- Chromium and Playwright system dependencies **only** in `-chromium` images.
+  Playwright browsers and the project's Playwright package are not preinstalled.
+
+Xdebug is disabled by default to avoid overhead in ordinary CI commands.
+Enable it explicitly for coverage with `XDEBUG_MODE=coverage`. PCOV is not installed.
+PHPCS is no longer installed globally: declare lint tools in your application's
+`composer.json` and use the versions recorded in its `composer.lock`.
 
 ## Build locally
 
-### With Chromium
+Run from the repository root. The existing Dockerfile paths are unchanged;
+installation logic and the ImageMagick policy are shared in `php/common/`.
+The default target also runs the smoke tests.
 
 ```bash
-docker build \
-  --build-arg INSTALL_CHROMIUM=true \
-  -t poldixd/php:8.4-chromium \
-  -f php/8.4/Dockerfile \
-  .
+docker build --build-arg INSTALL_CHROMIUM=false \
+  -t poldixd/php:8.4 -f php/8.4/Dockerfile .
+
+docker build --build-arg INSTALL_CHROMIUM=true \
+  -t poldixd/php:8.4-chromium -f php/8.4/Dockerfile .
 ```
 
-### Without Chromium
+For troubleshooting only, `--target runtime` skips the smoke tests.
 
-```bash
-docker build \
-  --build-arg INSTALL_CHROMIUM=false \
-  -t poldixd/php:8.4 \
-  -f php/8.4/Dockerfile \
-  .
-```
+## Use in GitLab CI
 
-## Use it in your .gitlab-ci.yml
-
-```yml
+```yaml
 test:
   stage: test
   image: poldixd/php:8.4
   script:
-    - php vendor/bin/pest --coverage
+    - composer install --no-interaction --prefer-dist
+    - XDEBUG_MODE=coverage php vendor/bin/pest --coverage
 ```
+
+For browser tests, use `poldixd/php:8.4-chromium`. Configure your browser tool
+explicitly when using system Chromium (`/usr/bin/chromium`). A root-run Chromium
+needs `--no-sandbox`; use it for trusted application tests. Playwright projects
+that use downloaded browsers should install the browser version matching their
+locked Playwright package. System dependencies here are pinned to Playwright
+1.64.0 and may need updating when your project upgrades Playwright.
+
+## Builds and maintenance
+
+Pull requests build and test without registry credentials or publishing. Main
+branch pushes, manual runs on main, and weekly scheduled runs publish images
+only after the image's smoke tests pass for both architectures. Tests check
+required PHP extensions, SQLite, actual Xdebug coverage collection, PDF-to-PNG
+conversion, command-line tools, and Chromium execution where applicable.
+
+BuildKit caches are scoped per PHP version and variant. Tests run on every build;
+weekly builds also bypass runtime cache to refresh Debian packages. Each PHP
+version/variant publishes independently: a failed matrix job fails the workflow,
+while other successful images can still be updated.
+
+PHP, Composer, Node and the extension-installer image use explicit release tags;
+Dependabot checks the Dockerfiles every weekday at 08:00 Europe/Berlin and
+GitHub Actions every Monday at the same time. Shared PECL,
+Corepack, Yarn and Playwright versions are pinned in `php/common/install.sh`
+and require deliberate updates there. Keep all four Dockerfiles' tool image
+versions in sync. Debian packages and upstream image tags remain mutable;
+these builds are not bit-for-bit reproducible.
 
 ## Contributing
 
@@ -40,4 +82,4 @@ Feel free to create a pull request.
 
 ## Credits
 
-- Special thanks to [edbizarro](https://github.com/edbizarro)
+Special thanks to [edbizarro](https://github.com/edbizarro).
