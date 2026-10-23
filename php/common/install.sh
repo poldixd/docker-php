@@ -1,5 +1,6 @@
 #!/bin/sh
 set -eu
+export DEBIAN_FRONTEND=noninteractive
 
 case "$INSTALL_CHROMIUM" in
     true|false) ;;
@@ -9,7 +10,7 @@ esac
 apt-get update
 apt-get install -y --no-install-recommends \
     bash ca-certificates curl ghostscript imagemagick git \
-    libstdc++6 mariadb-client openssh-client rsync
+    libatomic1 libstdc++6 mariadb-client openssh-client rsync
 
 # The installer manages and removes its own temporary build dependencies.
 install-php-extensions \

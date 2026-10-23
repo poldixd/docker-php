@@ -11,20 +11,37 @@ on:
 permissions:
   contents: read
 
-# Serialize publications so an older run cannot overwrite newer image tags.
+# Cancel superseded PR runs; serialize main-branch publications.
 concurrency:
-  group: php-images-${{ github.ref }}
-  cancel-in-progress: false
+  group: php-images-${{ github.event_name == 'pull_request' && 'pr' || 'publish' }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  changes:
+    name: Select image builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+      has_changes: ${{ steps.select.outputs.has_changes }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Test build selection
+        run: python3 -B -m unittest discover -s tests -p 'test_*.py'
+      - name: Select affected PHP versions
+        id: select
+        run: python3 -B .github/scripts/select_builds.py
+
   docker:
+    needs: changes
+    if: needs.changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     strategy:
       fail-fast: false
-      matrix:
-        version: ['8.2', '8.3', '8.4', '8.5']
-        variant: ['base', 'chromium']
+      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v7
@@ -72,3 +89,23 @@ jobs:
           tags: poldixd/php:${{ steps.vars.outputs.TAG }}
           cache-from: type=gha,scope=php-${{ matrix.version }}-${{ matrix.variant }}
           cache-to: type=gha,mode=max,scope=php-${{ matrix.version }}-${{ matrix.variant }}
+
+  checks:
+    name: Image checks
+    if: always()
+    needs: [changes, docker]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify selected builds succeeded
+        env:
+          SELECTION_RESULT: ${{ needs.changes.result }}
+          HAS_CHANGES: ${{ needs.changes.outputs.has_changes }}
+          BUILD_RESULT: ${{ needs.docker.result }}
+        run: |
+          test "$SELECTION_RESULT" = success
+          if [ "$HAS_CHANGES" = true ]; then
+            test "$BUILD_RESULT" = success
+          else
+            test "$BUILD_RESULT" = skipped
+          fi

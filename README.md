@@ -57,10 +57,19 @@ locked Playwright package. System dependencies here are pinned to Playwright
 
 ## Builds and maintenance
 
-Pull requests build and test without registry credentials or publishing. Main
-branch pushes, manual runs on main, and weekly scheduled runs publish images
-only after the image's smoke tests pass for both architectures. Tests check
-required PHP extensions, SQLite, actual Xdebug coverage collection, PDF-to-PNG
+Pull requests build and test without registry credentials or publishing. They
+build only the PHP versions whose directories changed, with both variants and
+architectures. PRs changing only `README.md`, `LICENSE` or `.github/dependabot.yml`
+skip image builds. Shared installation, test, workflow or other input changes
+rebuild all versions. New commits cancel older runs of the same PR.
+The stable `Image checks` job reports success for documentation-only changes too
+and can be used as the required branch-protection check.
+
+Main-branch pushes, manual runs and weekly scheduled runs build all versions.
+This ensures changes are included even if GitHub replaces a pending main-branch
+run. Publishing is restricted to main and requires the image's smoke tests to
+pass for both architectures. Tests check required PHP extensions, SQLite,
+actual Xdebug coverage collection, PDF-to-PNG
 conversion, command-line tools, and Chromium execution where applicable.
 
 BuildKit caches are scoped per PHP version and variant. Tests run on every build;
@@ -70,9 +79,9 @@ while other successful images can still be updated.
 
 PHP, Composer, Node and the extension-installer image use explicit release tags;
 Dependabot checks the Dockerfiles every weekday at 08:00 Europe/Berlin and
-GitHub Actions every Monday at the same time. Shared PECL,
-Corepack, Yarn and Playwright versions are pinned in `php/common/install.sh`
-and require deliberate updates there. Keep all four Dockerfiles' tool image
+GitHub Actions every Monday at the same time. Shared PECL, Corepack, Yarn and
+Playwright versions are pinned in `php/common/install.sh` and require deliberate
+updates there. Keep all four Dockerfiles' tool image
 versions in sync. Debian packages and upstream image tags remain mutable;
 these builds are not bit-for-bit reproducible.
 
