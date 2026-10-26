@@ -20,7 +20,7 @@ install-php-extensions \
 
 cp /tmp/php-image/imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
 printf '%s\n' 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-ci.ini
-printf '%s\n' 'xdebug.mode=off' > /usr/local/etc/php/conf.d/zz-xdebug.ini
+printf '%s\n' 'xdebug.mode=coverage' > /usr/local/etc/php/conf.d/zz-xdebug.ini
 
 # npm is supplied with the pinned official Node image; avoid curl | bash.
 ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm

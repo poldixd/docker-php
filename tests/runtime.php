@@ -15,8 +15,8 @@ foreach ($required as $extension) {
 if (extension_loaded('pcov')) {
     throw new RuntimeException('PCOV must not be loaded alongside Xdebug');
 }
-if (xdebug_info('mode') !== []) {
-    throw new RuntimeException('Xdebug must be disabled by default');
+if (!in_array('coverage', xdebug_info('mode'), true)) {
+    throw new RuntimeException('Xdebug coverage must be enabled by default');
 }
 
 // Laravel applications commonly use SQLite in CI.

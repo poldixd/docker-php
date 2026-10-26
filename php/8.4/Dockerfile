@@ -15,8 +15,7 @@ COPY --from=extensions /usr/bin/install-php-extensions /usr/local/bin/install-ph
 RUN --mount=type=bind,source=php/common,target=/tmp/php-image \
     sh /tmp/php-image/install.sh
 
-ENV PATH="./vendor/bin:/usr/local/bin:$PATH" \
-    XDEBUG_MODE=off
+ENV PATH="./vendor/bin:/usr/local/bin:$PATH"
 
 WORKDIR /var/www
 

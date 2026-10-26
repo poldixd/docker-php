@@ -16,8 +16,9 @@ All are built for `linux/amd64` and `linux/arm64` on Debian Trixie.
 - Chromium and Playwright system dependencies **only** in `-chromium` images.
   Playwright browsers and the project's Playwright package are not preinstalled.
 
-Xdebug is disabled by default to avoid overhead in ordinary CI commands.
-Enable it explicitly for coverage with `XDEBUG_MODE=coverage`. PCOV is not installed.
+Xdebug coverage is enabled by default, so `pest --coverage` works without extra
+configuration. Set `XDEBUG_MODE=off` in jobs that do not need coverage to avoid
+its overhead. PCOV is not installed.
 PHPCS is no longer installed globally: declare lint tools in your application's
 `composer.json` and use the versions recorded in its `composer.lock`.
 
@@ -45,7 +46,7 @@ test:
   image: poldixd/php:8.4
   script:
     - composer install --no-interaction --prefer-dist
-    - XDEBUG_MODE=coverage php vendor/bin/pest --coverage
+    - php vendor/bin/pest --coverage
 ```
 
 For browser tests, use `poldixd/php:8.4-chromium`. Configure your browser tool
@@ -58,8 +59,10 @@ locked Playwright package. System dependencies here are pinned to Playwright
 ## Builds and maintenance
 
 Pull requests build and test without registry credentials or publishing. They
-build only the PHP versions whose directories changed, with both variants and
-architectures. PRs changing only `README.md`, `LICENSE` or `.github/dependabot.yml`
+build only the PHP versions whose directories changed, with both variants on
+native AMD64. ARM64 emulation is reserved for main-branch, manual and scheduled
+builds. Each PR build job has a 30-minute timeout; a failed job cancels remaining
+matrix jobs. PRs changing only `README.md`, `LICENSE` or `.github/dependabot.yml`
 skip image builds. Shared installation, test, workflow or other input changes
 rebuild all versions. New commits cancel older runs of the same PR.
 The stable `Image checks` job reports success for documentation-only changes too
@@ -73,7 +76,9 @@ actual Xdebug coverage collection, PDF-to-PNG
 conversion, command-line tools, and Chromium execution where applicable.
 
 BuildKit caches are scoped per PHP version and variant. Tests run on every build;
-weekly builds also bypass runtime cache to refresh Debian packages. Each PHP
+PRs export only final-image layers to keep cache uploads small. Main-branch,
+manual and scheduled builds also cache intermediate stages. Weekly builds
+bypass runtime cache to refresh Debian packages. Each PHP
 version/variant publishes independently: a failed matrix job fails the workflow,
 while other successful images can still be updated.
 

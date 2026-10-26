@@ -38,16 +38,19 @@ jobs:
     needs: changes
     if: needs.changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: ${{ github.event_name == 'pull_request' && 30 || 120 }}
     strategy:
-      fail-fast: false
+      fail-fast: ${{ github.event_name == 'pull_request' }}
       matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v7
 
       - name: Set up QEMU
+        if: github.event_name != 'pull_request'
         uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -73,13 +76,14 @@ jobs:
             echo "INSTALL_CHROMIUM=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build, test both architectures, and optionally push
+      - name: Build, test, and optionally push
         uses: docker/build-push-action@v7
         with:
           context: .
           file: php/${{ matrix.version }}/Dockerfile
           target: test
-          platforms: linux/amd64,linux/arm64
+          # PRs run natively; publishing also validates ARM64 through QEMU.
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
           pull: true
           push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
           # Re-run tests even when the runtime layers are cached.
@@ -88,7 +92,8 @@ jobs:
             INSTALL_CHROMIUM=${{ steps.vars.outputs.INSTALL_CHROMIUM }}
           tags: poldixd/php:${{ steps.vars.outputs.TAG }}
           cache-from: type=gha,scope=php-${{ matrix.version }}-${{ matrix.variant }}
-          cache-to: type=gha,mode=max,scope=php-${{ matrix.version }}-${{ matrix.variant }}
+          # Keep PR exports small; release builds also cache intermediate stages.
+          cache-to: type=gha,mode=${{ github.event_name == 'pull_request' && 'min' || 'max' }},scope=php-${{ matrix.version }}-${{ matrix.variant }}
 
   checks:
     name: Image checks

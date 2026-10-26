@@ -2,7 +2,8 @@
 set -eu
 
 php /tmp/image-tests/runtime.php
-XDEBUG_MODE=coverage php /tmp/image-tests/coverage.php
+php /tmp/image-tests/coverage.php
+XDEBUG_MODE=off php -r 'exit(xdebug_info("mode") === [] ? 0 : 1);'
 composer --version
 node --version
 npm --version
