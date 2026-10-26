@@ -35,22 +35,20 @@ jobs:
         run: python3 -B .github/scripts/select_builds.py
 
   docker:
+    name: PHP ${{ matrix.version }} (${{ matrix.variant }}, ${{ matrix.architecture }})
     needs: changes
     if: needs.changes.outputs.has_changes == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: ${{ github.event_name == 'pull_request' && 30 || 120 }}
     strategy:
       fail-fast: ${{ github.event_name == 'pull_request' }}
-      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}
+      matrix:
+        version: ${{ fromJSON(needs.changes.outputs.matrix).version }}
+        variant: ${{ fromJSON(needs.changes.outputs.matrix).variant }}
+        architecture: ${{ fromJSON(github.event_name == 'pull_request' && '["amd64"]' || '["amd64","arm64"]') }}
 
     steps:
       - uses: actions/checkout@v7
-
-      - name: Set up QEMU
-        if: github.event_name != 'pull_request'
-        uses: docker/setup-qemu-action@v4
-        with:
-          platforms: arm64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -67,6 +65,7 @@ jobs:
         env:
           PHP_VERSION: ${{ matrix.version }}
           VARIANT: ${{ matrix.variant }}
+          PUBLISH_IMAGES: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
         run: |
           if [ "$VARIANT" = "chromium" ]; then
             echo "TAG=$PHP_VERSION-chromium" >> "$GITHUB_OUTPUT"
@@ -75,30 +74,103 @@ jobs:
             echo "TAG=$PHP_VERSION" >> "$GITHUB_OUTPUT"
             echo "INSTALL_CHROMIUM=false" >> "$GITHUB_OUTPUT"
           fi
+          if [ "$PUBLISH_IMAGES" = true ]; then
+            echo 'OUTPUTS=type=image,name=poldixd/php,push-by-digest=true,name-canonical=true,push=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'OUTPUTS=type=cacheonly' >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build, test, and optionally push
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: .
           file: php/${{ matrix.version }}/Dockerfile
           target: test
-          # PRs run natively; publishing also validates ARM64 through QEMU.
-          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          # Chromium smoke tests must run natively, not through QEMU.
+          platforms: linux/${{ matrix.architecture }}
           pull: true
-          push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+          outputs: ${{ steps.vars.outputs.OUTPUTS }}
           # Re-run tests even when the runtime layers are cached.
           no-cache-filters: ${{ github.event_name == 'schedule' && 'runtime,test' || 'test' }}
           build-args: |
             INSTALL_CHROMIUM=${{ steps.vars.outputs.INSTALL_CHROMIUM }}
-          tags: poldixd/php:${{ steps.vars.outputs.TAG }}
-          cache-from: type=gha,scope=php-${{ matrix.version }}-${{ matrix.variant }}
+          cache-from: type=gha,scope=php-${{ matrix.version }}-${{ matrix.variant }}-${{ matrix.architecture }}
           # Keep PR exports small; release builds also cache intermediate stages.
-          cache-to: type=gha,mode=${{ github.event_name == 'pull_request' && 'min' || 'max' }},scope=php-${{ matrix.version }}-${{ matrix.variant }}
+          cache-to: type=gha,mode=${{ github.event_name == 'pull_request' && 'min' || 'max' }},scope=php-${{ matrix.version }}-${{ matrix.variant }}-${{ matrix.architecture }}
+
+      - name: Save tested image digest
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          ARCHITECTURE: ${{ matrix.architecture }}
+        run: |
+          test -n "$DIGEST"
+          mkdir -p "$RUNNER_TEMP/digests"
+          printf '%s\n' "$DIGEST" > "$RUNNER_TEMP/digests/$ARCHITECTURE.txt"
+
+      - name: Upload tested image digest
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ steps.vars.outputs.TAG }}-${{ matrix.architecture }}
+          path: ${{ runner.temp }}/digests/*.txt
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish PHP ${{ matrix.version }} (${{ matrix.variant }})
+    needs: [changes, docker]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}
+    steps:
+      - name: Compute image tag
+        id: vars
+        env:
+          PHP_VERSION: ${{ matrix.version }}
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          tag="$PHP_VERSION"
+          if [ "$VARIANT" = chromium ]; then
+            tag="$tag-chromium"
+          fi
+          echo "TAG=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Download tested image digests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: digests-${{ steps.vars.outputs.TAG }}-*
+          path: ${{ runner.temp }}/digests
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publish both tested architectures under the image tag
+        env:
+          TAG: ${{ steps.vars.outputs.TAG }}
+        run: |
+          amd64=$(cat "$RUNNER_TEMP/digests/amd64.txt")
+          arm64=$(cat "$RUNNER_TEMP/digests/arm64.txt")
+          test -n "$amd64"
+          test -n "$arm64"
+          docker buildx imagetools create --tag "poldixd/php:$TAG" \
+            "poldixd/php@$amd64" "poldixd/php@$arm64"
 
   checks:
     name: Image checks
     if: always()
-    needs: [changes, docker]
+    needs: [changes, docker, publish]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -107,10 +179,17 @@ jobs:
           SELECTION_RESULT: ${{ needs.changes.result }}
           HAS_CHANGES: ${{ needs.changes.outputs.has_changes }}
           BUILD_RESULT: ${{ needs.docker.result }}
+          PUBLISH_IMAGES: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
         run: |
           test "$SELECTION_RESULT" = success
           if [ "$HAS_CHANGES" = true ]; then
             test "$BUILD_RESULT" = success
           else
             test "$BUILD_RESULT" = skipped
+          fi
+          if [ "$PUBLISH_IMAGES" = true ]; then
+            test "$PUBLISH_RESULT" = success
+          else
+            test "$PUBLISH_RESULT" = skipped
           fi

@@ -60,9 +60,10 @@ locked Playwright package. System dependencies here are pinned to Playwright
 
 Pull requests build and test without registry credentials or publishing. They
 build only the PHP versions whose directories changed, with both variants on
-native AMD64. ARM64 emulation is reserved for main-branch, manual and scheduled
-builds. Each PR build job has a 30-minute timeout; a failed job cancels remaining
-matrix jobs. PRs changing only `README.md`, `LICENSE` or `.github/dependabot.yml`
+native AMD64. Main-branch, manual and scheduled builds run AMD64 and ARM64 on
+separate native runners, without QEMU. Each PR build job has a 30-minute timeout;
+a failed job cancels remaining matrix jobs. PRs changing only `README.md`,
+`LICENSE` or `.github/dependabot.yml`
 skip image builds. Shared installation, test, workflow or other input changes
 rebuild all versions. New commits cancel older runs of the same PR.
 The stable `Image checks` job reports success for documentation-only changes too
@@ -70,17 +71,18 @@ and can be used as the required branch-protection check.
 
 Main-branch pushes, manual runs and weekly scheduled runs build all versions.
 This ensures changes are included even if GitHub replaces a pending main-branch
-run. Publishing is restricted to main and requires the image's smoke tests to
-pass for both architectures. Tests check required PHP extensions, SQLite,
+run. Publishing is restricted to main. All native build jobs must pass before
+the publish stage combines their digests into multi-platform image tags.
+Tests check required PHP extensions, SQLite,
 actual Xdebug coverage collection, PDF-to-PNG
 conversion, command-line tools, and Chromium execution where applicable.
 
-BuildKit caches are scoped per PHP version and variant. Tests run on every build;
-PRs export only final-image layers to keep cache uploads small. Main-branch,
+BuildKit caches are scoped per PHP version, variant and architecture. Tests run
+on every build; PRs export only final-image layers to keep cache uploads small. Main-branch,
 manual and scheduled builds also cache intermediate stages. Weekly builds
-bypass runtime cache to refresh Debian packages. Each PHP
-version/variant publishes independently: a failed matrix job fails the workflow,
-while other successful images can still be updated.
+bypass runtime cache to refresh Debian packages. A failed build prevents tag
+publication. Each PHP version/variant has a separate publishing job; publication
+failures fail the workflow and can leave some tags updated and others unchanged.
 
 PHP, Composer, Node and the extension-installer image use explicit release tags;
 Dependabot checks the Dockerfiles every weekday at 08:00 Europe/Berlin and
