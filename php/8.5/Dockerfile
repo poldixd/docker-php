@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM node:26.12.1-trixie-slim AS node
+FROM node:26.13.0-trixie-slim AS node
 FROM composer:2.11.0 AS composer
 FROM mlocati/php-extension-installer:2.13.1 AS extensions
 
