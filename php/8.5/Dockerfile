@@ -3,7 +3,7 @@ FROM node:26.13.1-trixie-slim AS node
 FROM composer:2.11.2 AS composer
 FROM mlocati/php-extension-installer:2.13.2 AS extensions
 
-FROM php:8.5.12-cli-trixie AS runtime
+FROM php:8.5.13RC1-cli-trixie AS runtime
 
 ARG INSTALL_CHROMIUM=false
 
