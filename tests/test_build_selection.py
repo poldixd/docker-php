@@ -14,7 +14,7 @@ spec = importlib.util.spec_from_file_location(
 )
 selection = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(selection)
-VERSIONS = ['8.2', '8.3', '8.4', '8.5']
+VERSIONS = ['8.2', '8.3', '8.4', '8.5', '8.6']
 
 
 class BuildSelectionTest(unittest.TestCase):
@@ -24,9 +24,11 @@ class BuildSelectionTest(unittest.TestCase):
         ), [])
 
     def test_one_version_builds_only_that_version(self):
-        self.assertEqual(selection.select_versions(
-            ['php/8.4/Dockerfile', 'README.md'], VERSIONS,
-        ), ['8.4'])
+        for version in VERSIONS:
+            with self.subTest(version=version):
+                self.assertEqual(selection.select_versions(
+                    [f'php/{version}/Dockerfile', 'README.md'], VERSIONS,
+                ), [version])
 
     def test_multiple_versions_are_deduplicated(self):
         self.assertEqual(selection.select_versions(

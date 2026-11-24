@@ -16,7 +16,7 @@ apt-get install -y --no-install-recommends \
 install-php-extensions \
     bcmath bz2 calendar exif gd gmp imagick-3.8.1 intl \
     mongodb-2.5.5 mysqli opcache pcntl pdo_mysql pdo_pgsql pgsql \
-    redis-6.3.0 soap sockets xdebug-3.5.3 xsl zip
+    "redis-${REDIS_VERSION:-6.3.0}" soap sockets "${XDEBUG_SOURCE:-xdebug-3.5.3}" xsl zip
 
 cp /tmp/php-image/imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
 printf '%s\n' 'memory_limit=-1' > /usr/local/etc/php/conf.d/zz-ci.ini

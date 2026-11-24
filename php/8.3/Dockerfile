@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM node:26.13.1-trixie-slim AS node
 FROM composer:2.11.2 AS composer
-FROM mlocati/php-extension-installer:2.13.2 AS extensions
+FROM mlocati/php-extension-installer:2.13.3 AS extensions
 
 FROM php:8.3.36-cli-trixie AS runtime
 

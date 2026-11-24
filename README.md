@@ -3,7 +3,7 @@
 Personal PHP CLI images for testing Laravel applications in CI, published as
 [`poldixd/php`](https://hub.docker.com/r/poldixd/php).
 
-Supported tags: `8.2`, `8.3`, `8.4`, `8.5`, plus a `-chromium` variant of each.
+Supported tags: `8.2`, `8.3`, `8.4`, `8.5`, `8.6`, plus a `-chromium` variant of each.
 All are built for `linux/amd64` and `linux/arm64` on Debian Trixie.
 
 ## Included tools
@@ -19,6 +19,11 @@ All are built for `linux/amd64` and `linux/arm64` on Debian Trixie.
 Xdebug coverage is enabled by default, so `pest --coverage` works without extra
 configuration. Set `XDEBUG_MODE=off` in jobs that do not need coverage to avoid
 its overhead. PCOV is not installed.
+PHP 8.6 uses [Xdebug `3.6.0alpha1`](https://xdebug.org/updates), which adds
+PHP 8.6 support, and [Redis `6.4.0RC1`](https://pecl.php.net/package/redis/6.4.0RC1)
+for PHP 8.6 compatibility. These are prereleases; earlier PHP versions keep
+Xdebug `3.5.3` and Redis `6.3.0`.
+
 PHPCS is no longer installed globally: declare lint tools in your application's
 `composer.json` and use the versions recorded in its `composer.lock`.
 
@@ -88,8 +93,10 @@ PHP, Composer, Node and the extension-installer image use explicit release tags;
 Dependabot checks the Dockerfiles every weekday at 08:00 Europe/Berlin and
 GitHub Actions every Monday at the same time. Shared PECL, Corepack, Yarn and
 Playwright versions are pinned in `php/common/install.sh` and require deliberate
-updates there. Keep all four Dockerfiles' tool image
-versions in sync. Debian packages and upstream image tags remain mutable;
+updates there. PHP 8.6's Redis and Xdebug overrides are pinned in its Dockerfile.
+Its build also aliases the removed `XtOffsetOf` macro to `offsetof` for the
+pinned PECL releases. Keep all Dockerfiles' tool image versions in sync.
+Debian packages and upstream image tags remain mutable;
 these builds are not bit-for-bit reproducible.
 
 ## Contributing
